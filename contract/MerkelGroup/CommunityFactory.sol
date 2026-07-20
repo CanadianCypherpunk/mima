@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+/**
+ * LEGACY DOCUMENTATION SNAPSHOT
+ * This factory uses the retired EIP-1167 Community + Room model. The current
+ * community architecture uses BeaconProxy instances, BaseCommunity leaf kinds
+ * and separate discovery sources. See README.md in this directory.
+ */
+
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";

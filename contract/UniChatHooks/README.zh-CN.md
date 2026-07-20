@@ -2,7 +2,7 @@
 
 UniChat / MIMA 社区经济的 Uniswap v4 Hook 集成模块。它把建群邀请、MIMA/USDT 流动性、Swap 活动和收益分账连接起来。
 
-完整 Hardhat 实现在 `/Users/yoona/workspace/univ4-hooks`。这里保留面向 UniChat 的模块说明和一个很小的对接接口，保持和其它 `contract/<Module>` 目录一致，不把整套 Uniswap v4 代码搬进来。
+这里保留面向 UniChat 的公开模块说明和一个很小的对接接口，不复制完整的 Uniswap v4 实现工程。在当前社区架构中，支持 Hook 的群属于构建在 `BaseCommunity` 之上的 `HOOKS` 类型实现。
 
 ## 目录
 
@@ -23,17 +23,16 @@ UniChatHooks 把“加流动性”变成社区行为：
 - LP 行为由 Hook 记录，并转发给收益管理器。
 - 收益可按群主、邀请人、LP 进行拆分。
 
-该模块主要面向 BSC 主网，因为 MIMA 的 Uniswap v4 池预计部署在 BSC。
-
 ## 架构
 
 | 合约 | 职责 |
 | --- | --- |
+| `HooksCommunity` | 面向 `HOOKS` 类型的 `BaseCommunity` 特化实现，增加邀请人白名单与授权 LP 自动入群。 |
 | `CommunityInviteBindingManager` | 创建 shareId，并把 invitee 永久绑定到 inviter/group/share。 |
 | `CommunityPoolRegistry` | 保存 canonical MIMA/USDT Hook pool，并把群映射到该池。 |
 | `MimaCommunityHook` | 校验已注册的 MIMA 池，记录 Swap，并转发 LP 回调。 |
 | `CommunityHookRevenueManager` | 记录 LP 仓位，校验邀请绑定，并维护可领取收益。 |
-| `CommunityHookLens` | 给前端聚合群、池、LP 仓位和收益读取。 |
+| `CommunityHookLens` | 聚合群、池、LP 仓位和收益读取。 |
 
 ```
 社区分享

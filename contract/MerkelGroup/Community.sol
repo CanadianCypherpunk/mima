@@ -1,6 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+/**
+ * LEGACY DOCUMENTATION SNAPSHOT
+ * This EIP-1167 clone-and-room implementation predates the current
+ * BaseCommunity + kind-specific BeaconProxy architecture. It is retained only
+ * for historical reference and MUST NOT be used as the integration or
+ * deployment source of truth. See README.md in this directory.
+ */
+
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";

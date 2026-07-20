@@ -2,7 +2,7 @@
 
 Uniswap v4 Hook integration for the UniChat / MIMA community economy. This module connects group invitation, MIMA/USDT liquidity, swap activity, and revenue sharing.
 
-The full Hardhat implementation lives in `/Users/yoona/workspace/univ4-hooks`. This folder keeps the UniChat-facing module summary and a small integration surface so it matches the other `contract/<Module>` folders without copying the whole Uniswap v4 codebase.
+This folder is the public UniChat-facing module summary and a small integration surface; it does not copy the full Uniswap v4 implementation workspace. In the current community architecture, a Hook-enabled group is a `HOOKS`-kind implementation built on `BaseCommunity`.
 
 ## Table of Contents
 
@@ -23,17 +23,16 @@ UniChatHooks turns liquidity participation into a community action:
 - LP activity is recorded by the Hook and forwarded to the revenue manager.
 - Rewards can be split between the group owner, inviter, and LP.
 
-This is intended for BSC mainnet, where the MIMA Uniswap v4 pool is expected to live.
-
 ## Architecture
 
 | Contract | Role |
 | --- | --- |
+| `HooksCommunity` | `BaseCommunity` specialization for the `HOOKS` kind, including inviter whitelisting and authorized LP auto-join. |
 | `CommunityInviteBindingManager` | Creates share IDs and permanently binds an invitee to inviter/group/share. |
 | `CommunityPoolRegistry` | Stores the canonical MIMA/USDT Hook pool and maps groups to that pool. |
 | `MimaCommunityHook` | Validates registered MIMA pools, records swaps, and forwards LP callbacks. |
 | `CommunityHookRevenueManager` | Records LP positions, checks invite binding, and tracks claimable revenue. |
-| `CommunityHookLens` | Aggregates group, pool, LP position, and claimable revenue reads for the frontend. |
+| `CommunityHookLens` | Aggregates group, pool, LP position, and claimable revenue reads. |
 
 ```
 Community share

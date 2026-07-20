@@ -22,7 +22,7 @@ The AirdropGroup module provides:
 - **One-time claim**: Each address in the Merkle tree may claim once; leaf = `keccak256(abi.encode(account))`.
 - **Inviter binding**: At claim time the user may bind an inviter; the binding is permanent (first bind wins).
 - **Dual rewards**: Claimer and inviter both receive **密马.com** rewards via `OZTToken.mintByClaim`.
-- **On-chain group join**: After claim, both claimer and inviter are added to the **MerkelGroup Community** (see below) via `ICommunityClaimJoin.claimJoin(address)`.
+- **On-chain group join**: After claim, both claimer and inviter are added to a compatible **BaseCommunity** instance via `ICommunityClaimJoin.claimJoin(address)`.
 - **OZT-compliant minting**: Only the claim contract can mint; token owner can renounce/transfer to burn address so the project has no minting power.
 
 Optional controls: blacklist, max invitees per inviter (0 = unlimited), and Merkle root freeze (irreversible).
@@ -179,19 +179,19 @@ All steps are independently verifiable on-chain and from public data.
 - **IOZTToken**: `mintByClaim(to, amount)`, `setClaimContractOnce(claimContract_)`.
 - **ICommunityClaimJoin**: `claimJoin(account)` — called so claimer and inviter join an on-chain group.
 
-### Group joined after claim (MerkelGroup Community)
+### Group joined after claim (`BaseCommunity` capability)
 
-The community contract that receives claimers and inviters is the **MerkelGroup [Community](../MerkelGroup/Community.sol)**. In that contract:
+The destination is a deployed community kind that exposes the shared [`BaseCommunity` claim-join capability](../MerkelGroup/README.md), rather than the legacy `Community.sol` snapshot in this repository:
 
 - **`claimJoin(address account)`** adds `account` as a member with the community’s maximum tier in the current epoch. It is callable only by addresses in the **claim operator** list (`onlyClaimOperator`).
 - The Community owner must call **`setClaimOperator(airdropClaimAddress, true)`** so that the AirdropClaim contract is allowed to call `claimJoin`. Without this, `AirdropClaim.claim` would revert when it tries to add the claimer and inviter to the community.
 
-So: after a successful claim, both the claimer and the inviter are added to that Community group (same one used for Merkle-based join and rooms).
+After a successful claim, both claimer and inviter join the configured community instance at its maximum tier for the current epoch.
 
 ### Deployment Order
 
 1. Deploy **密马.com (OZTToken)** (name, symbol, initialOwner).
-2. Deploy **AirdropClaim** (owner, token, community, merkleRoot), where `community` is the MerkelGroup **Community** address.
+2. Deploy **AirdropClaim** (owner, token, community, merkleRoot), where `community` is a compatible deployed `BaseCommunity`-kind address.
 3. On the **Community** contract: call **setClaimOperator**(airdropClaimAddress, true) so AirdropClaim can call `claimJoin`.
 4. On **密马.com (OZTToken)**: call **setClaimContractOnce**(airdropClaimAddress).
 5. On AirdropClaim: set Merkle root if not set in constructor; optionally **freezeMerkleRoot**.
@@ -213,7 +213,7 @@ So: after a successful claim, both the claimer and the inviter are added to that
 
 ### AirdropClaim
 
-- **Constructor**: `(initialOwner, token_, community_, merkleRoot_)` — `token_` is the **密马.com** token contract (`OZTToken`), `community_` is the MerkelGroup Community (must have AirdropClaim set as claim operator via `Community.setClaimOperator`); `merkleRoot_` can be `bytes32(0)` and set later once.
+- **Constructor**: `(initialOwner, token_, community_, merkleRoot_)` — `token_` is the **密马.com** token contract (`OZTToken`), `community_` is a compatible community instance (it must authorize AirdropClaim with `setClaimOperator`); `merkleRoot_` can be `bytes32(0)` and set later once.
 - **Claim**: `claim(proof, inviter)` — `proof` is Merkle proof for `msg.sender` (leaf = `keccak256(abi.encode(msg.sender))`); `inviter` can be `address(0)`. First successful claim binds inviter permanently; claimer and inviter get rewards and `community.claimJoin` is called for both.
 - **Admin**: `setMerkleRoot` (only before any root was set and before freeze), `freezeMerkleRoot`, `setCommunity`, `setBlacklist`, `setInviterLimit`, `rescueERC20`.
 - **Views**: `merkleRoot()`, `isClaimed(account)`, `inviterOf(invitee)`, `inviteeCount(inviter)`, `getInvitees(inviter, offset, limit)`.

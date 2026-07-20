@@ -41,7 +41,7 @@ UniChat is a modular smart contract ecosystem designed for Web3 social applicati
 
 **Modularity**: Each contract module solves a specific problem and can be used independently or combined.
 
-**Scalability**: Gas-efficient designs using Merkle Trees and minimal proxies to support thousands of users.
+**Scalability**: Gas-efficient Merkle membership with upgradeable beacon domains for each community kind.
 
 **Flexibility**: Configurable parameters allow customization for different use cases.
 
@@ -95,20 +95,24 @@ On-chain peer-to-peer messaging contract storing conversation history permanentl
 
 ---
 
-### 🏘️ MerkelGroup
-**Purpose**: Scalable communities with Merkle Tree whitelists
+### 🏘️ BaseCommunity Platform
+**Purpose**: A shared community foundation with independently evolvable business kinds
 
-Large-scale community management using Merkle Tree-based whitelist verification for gas efficiency. Supports thousands of members with tier-based access control, nested room structure, encrypted group messaging, and distributed key management.
+Here, “Base” means the abstract `BaseCommunity` contract layer, not the Base blockchain network.
+
+`BaseCommunity` centralizes membership, Merkle admission, messaging, red packets, referral records, auto-join interfaces and operational controls. Thin leaf contracts reuse those capabilities while expressing a specific on-chain kind. OFFICIAL, LAUNCHER and HOOKS can use separate beacons, limiting one type's implementation changes to its own upgrade domain.
 
 **Key Features**:
-- Merkle Tree whitelist (gas-efficient)
-- Epoch-based membership updates
-- Tier system (1-7 asset-based levels)
-- Nested room architecture (large community → small rooms)
-- RSA group key distribution
-- Encrypted/plaintext messaging
+- Epoch-based Merkle membership with tier and nonce protection
+- Text, media and encrypted-message metadata
+- Group red packets and authorized auto-join integrations
+- Non-blocking referral relationship graph (P0)
+- `communityKind()` self-description for compatible leaf contracts
+- Kind-specific BeaconProxy upgrade domains
+- Canonical `kind → beacon` directory for governance and discovery
+- Separate group-key registry with rotation and revocation semantics
 
-**Ideal For**: NFT holder communities, tiered memberships, educational platforms, large DAOs
+**Ideal For**: Official communities, token-launch communities, liquidity communities and governed future extensions
 
 **Documentation**: [contract/MerkelGroup/README.md](./contract/MerkelGroup/README.md)
 
@@ -129,7 +133,7 @@ Flexible red packet contract for personal and group token distributions. Feature
 
 **Ideal For**: Token airdrops, community rewards, marketing campaigns, gaming rewards
 
-**Documentation**: [contract/RedPacket/README.md](./contract/RedPacket/README.md)
+**Documentation**: [contract/redpacket/README.md](./contract/redpacket/README.md)
 
 ---
 
@@ -143,7 +147,7 @@ Uniswap v4 Hook module for MIMA/USDT liquidity communities. It links invite bind
 - Invitation binding before LP admission
 - Hook-validated liquidity and swap events
 - Revenue split for group owner, inviter, and LP
-- Read-only lens for frontend dashboards
+- Read-only aggregation lens for group, pool, LP position and claimable revenue state
 
 **Ideal For**: Liquidity-backed communities, referral-driven LP campaigns, MIMA pool operations
 
@@ -158,28 +162,21 @@ Uniswap v4 Hook module for MIMA/USDT liquidity communities. It links invite bind
 │           UniChat Smart Contract Suite          │
 └─────────────────────────────────────────────────┘
                         │
-        ┌───────────────┼───────────────┐
-        │               │               │
-        ▼               ▼               ▼
-┌──────────────┐ ┌──────────────┐ ┌──────────────┐
-│ RedPacketGrp │ │ MerkleGroup  │ │DirectMessage │
-│   Ecosystem  │ │   Ecosystem  │ │   Contract   │
-└──────────────┘ └──────────────┘ └──────────────┘
-        │               │               │
-        ├─Registry      ├─Factory       └─RSA Keys
-        ├─Factory       ├─Community         Blacklist
-        └─Group         └─Room              Messages
-                                            
-                ┌──────────────┐
-                │  RedPacket   │
-                │  Contract    │
-                └──────────────┘
-                     (Shared)
+       ┌────────────────┼────────────────┐
+       │                │                │
+       ▼                ▼                ▼
+ DirectMessage    RedPacketGroup    BaseCommunity
+                                            │
+                         ┌──────────────────┼──────────────────┐
+                         ▼                  ▼                  ▼
+                    OFFICIAL           LAUNCHER             HOOKS
+                  official beacon   launcher beacon      hooks beacon
+                         └──────────────────┼──────────────────┘
+                                            ▼
+                              CommunityKindRegistry
+                              (kind → beacon directory)
 
-                ┌──────────────┐
-                │UniChatHooks  │
-                │ MIMA v4 Pool │
-                └──────────────┘
+ Shared integrations: RedPacket · AirdropClaim · CommunityKeyRegistry
 ```
 
 ### Integration Patterns
@@ -192,14 +189,15 @@ RedPacket (Token Gifts)
 ```
 Simple peer-to-peer messaging with optional token transfers.
 
-#### Pattern 2: Community + Red Packets
+#### Pattern 2: Standard Community
 ```
-MerkleGroup Community
-    ├─> Members (Merkle verified)
-    ├─> Rooms (nested chats)
-    └─> RedPacket (group rewards)
+OfficialCommunity
+    ├─> Merkle / invited members
+    ├─> Community messages
+    ├─> Referral records
+    └─> RedPacket (explicitly authorized)
 ```
-Large communities with rewards and nested discussions.
+Standard communities reuse the complete BaseCommunity capability set.
 
 #### Pattern 3: Economic Group
 ```
@@ -211,25 +209,30 @@ RedPacketGroup
 ```
 Token-gated communities with built-in economics.
 
-#### Pattern 4: Full Integration
+#### Pattern 4: Token Launch Community
 ```
-MerkleGroup Community
-    ├─> DirectMessage (P2P between members)
-    ├─> RedPacket (airdrops)
-    └─> Rooms
-            ├─> Group RedPackets
-            └─> Private discussions
+TokenLauncherFactory
+    ├─> StrictLaunchToken
+    └─> LauncherCommunity
+            ├─> BaseCommunity capabilities
+            └─> Separate launcher discovery index
 ```
-Complete social platform with all features.
+Launch communities can evolve behind a dedicated beacon without changing official communities.
 
 #### Pattern 5: Community Liquidity Economy
 ```
-MerkleGroup / RedPacketGroup Community
-    ├─> Invite Binding
-    ├─> MIMA/USDT Hook Pool
-    └─> Revenue Sharing
+HooksCommunity
+    ├─> LP auto-admission (authorized claim operator)
+    ├─> Inviter eligibility
+    └─> External Hook revenue system
 ```
-Liquidity-backed communities with inviter and LP incentives.
+Liquidity communities reuse BaseCommunity while keeping pool and revenue logic outside the group core.
+
+### Important Boundaries
+
+- `CommunityKindRegistry` catalogs kind beacons; current factories do not universally route creation through it.
+- Official, launcher and Hook communities have separate discovery sources rather than one global instance list.
+- Existing proxies stay attached to their original beacon when a registry entry changes.
 
 ## Technology Stack
 
@@ -250,9 +253,12 @@ Liquidity-backed communities with inviter and LP incentives.
 
 ### Design Patterns
 
-- **EIP-1167 Minimal Proxy**: Gas-efficient cloning
-  - Used in: GroupFactory, CommunityFactory
-  - Savings: ~90% deployment gas
+- **BeaconProxy + UpgradeableBeacon**: Upgradeable community instances
+  - Used by: OFFICIAL, LAUNCHER and HOOKS community domains
+  - Each kind with a dedicated beacon can evolve through its own upgrade domain
+  - Storage compatibility is checked before existing community proxies change implementation
+
+- **EIP-1167 Minimal Proxy**: Gas-efficient cloning remains available in legacy or separate modules such as GroupFactory; it is not the current CommunityFactory model
   
 - **Factory Pattern**: Standardized contract creation
   - Predictable addresses
@@ -300,7 +306,7 @@ struct Member {
 - **RSA Public Keys**: On-chain key registry
 - **Client-Side Encryption**: Privacy-preserving
 - **Key Rotation**: Update keys without losing history
-- **Group Keys**: Distributed via Merkle Trees
+- **Community Group Keys**: Separate registry with rotation, revocation and Merkle-distributed encrypted session-key packages
 
 #### Moderation Tools
 - **Blacklists**: User-controlled blocking
@@ -369,70 +375,25 @@ Entry Fee Split:
 - With subgroup: 4.5% main + 4.5% subgroup
 ```
 
-#### MerkleGroup Structure
+#### BaseCommunity Structure
 ```
-Community (10,000+ members)
-├─> Room 1 (10-50 members)
-├─> Room 2 (10-50 members)
-└─> Room N (10-50 members)
+BaseCommunity (shared capabilities)
+├─> OfficialCommunity (OFFICIAL)
+├─> LauncherCommunity (LAUNCHER)
+└─> HooksCommunity (HOOKS)
 
-Access: Community membership → Room invites
+Upgrade boundary: one existing beacon domain per kind with a dedicated beacon
+Instance indexes: maintained by the relevant factory or integration domain
 ```
 
 ## Quick Start
 
-### Prerequisites
+This repository is the public whitepaper and architecture reference for the UniChat contracts. It is not a standalone Hardhat or Foundry workspace, and the included Solidity files are documentation snapshots rather than the production source of truth.
 
-```bash
-# Install Node.js and pnpm
-node --version  # v18+
-pnpm --version  # v8+
-
-# Install Hardhat or Foundry
-pnpm add --save-dev hardhat
-# or
-curl -L https://foundry.paradigm.xyz | bash
-foundryup
-```
-
-### Installation
-
-```bash
-# Clone repository
-git clone <repository-url>
-cd unichat
-
-# Install dependencies
-pnpm install
-
-# Compile contracts
-pnpm hardhat compile
-# or
-forge build
-```
-
-### Run Tests
-
-```bash
-# Hardhat
-pnpm hardhat test
-
-# Foundry
-forge test
-```
-
-### Deploy Contracts
-
-```bash
-# Configure network in hardhat.config.js
-# Add private key to .env
-
-# Deploy to testnet
-pnpm hardhat run scripts/deploy.js --network sepolia
-
-# Verify on Etherscan
-pnpm hardhat verify --network sepolia <CONTRACT_ADDRESS>
-```
+1. Start with the [BaseCommunity architecture guide](./contract/MerkelGroup/README.md).
+2. Read the module README that matches the capability you are integrating.
+3. Confirm the intended factory, kind, beacon, and registry relationships before integration.
+4. Do not derive current production behavior from legacy snapshots in this repository.
 
 ## Deployment Guide
 
@@ -472,34 +433,22 @@ address group = factory.createGroup(
 );
 ```
 
-### 2. MerkleGroup Deployment
+### 2. BaseCommunity Kind Deployment
 
-```solidity
-// Step 1: Deploy Implementations
-Community communityImpl = new Community();
-Room roomImpl = new Room();
-
-// Step 2: Deploy Factory
-CommunityFactory factory = new CommunityFactory(
-    unichatToken,
-    treasury,
-    50e18,  // Room creation fee
-    address(communityImpl),
-    address(roomImpl)
-);
-
-// Step 3: Create Community
-address community = factory.createCommunity(
-    ownerAddr,
-    topicToken,
-    7,  // maxTier
-    "NFT Holders",
-    "QmAvatar..."
-);
-
-// Step 4: Set Merkle Root
-Community(community).setMerkleRoot(root, "ipfs://...");
+```text
+1. Deploy the appropriate BaseCommunity leaf implementation.
+2. Deploy or select the UpgradeableBeacon for that kind.
+3. Register the kind and beacon in the canonical directory.
+4. Configure the creator that actually uses the beacon:
+   - CommunityFactory for OFFICIAL
+   - TokenLauncherFactory for LAUNCHER
+   - the Hook integration flow for HOOKS
+5. Create and initialize the BeaconProxy community instance.
+6. Explicitly wire red-packet, claim-operator, launcher or Hook permissions.
+7. Publish the Merkle root and the protocol metadata needed by the integration.
 ```
+
+Changing a registry entry alone does not upgrade existing proxies or reconfigure a factory's direct beacon reference. See the [BaseCommunity architecture guide](./contract/MerkelGroup/README.md) before any deployment or integration.
 
 ### 3. RedPacket Deployment
 
@@ -560,18 +509,18 @@ Features:
 ### Example 2: NFT Community
 
 ```
-Components: MerkleGroup + RedPacket
+Components: OfficialCommunity + RedPacket
 
 Setup:
 - Topic Token: NFT collection address
 - Tiers: 1-5 based on NFT holdings
-- Rooms: Different NFT rarity discussions
+- Community messages: Text, encrypted messages and media CIDs
 
 Features:
 - Merkle whitelist (only NFT holders)
-- Tier-based room access
+- Tier-based membership
 - Red packet airdrops to holders
-- Encrypted discussion rooms
+- Referral records and encrypted community discussions
 ```
 
 ### Example 3: P2P Marketplace
@@ -594,16 +543,16 @@ Features:
 ### Example 4: Gaming Guild
 
 ```
-Components: RedPacketGroup + MerkleGroup
+Components: RedPacketGroup + BaseCommunity kinds
 
 Setup:
 - RedPacketGroup: Main guild (entry fees)
-- MerkleGroup Communities: Per-game groups
+- OfficialCommunity: Per-game standard groups
 - Subgroups: Teams/squads
 
 Features:
 - Entry fees fund prize pools
-- Game-specific rooms
+- Game-specific communities
 - Random red packet tournaments
 - Performance-based tier upgrades
 ```
@@ -742,30 +691,23 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ## Roadmap
 
-### Phase 1: Core Contracts ✅
-- [x] RedPacketGroup system
-- [x] MerkleGroup system
-- [x] RedPacket contract
-- [x] DirectMessage contract
-- [x] UniChatHooks module
+### Delivered Foundations
+- [x] Shared `BaseCommunity` storage and behavior
+- [x] `OFFICIAL`, `LAUNCHER`, and `HOOKS` implementation domains
+- [x] Kind-specific upgradeable beacons and compatibility checks
+- [x] Referral Graph P0 and the `CommunityKeyRegistry` v2 contract model
 
-### Phase 2: Enhancements (Q2 2024)
-- [ ] NFT-gated groups
-- [ ] Multi-token entry fees
-- [ ] Advanced governance modules
-- [ ] Reputation system
+### Architecture Evolution
+- [ ] Additional governed community kinds built on `BaseCommunity`
+- [ ] Richer kind-specific governance and moderation policies
+- [ ] Broader cross-module standards for claim, key, red-packet, and Hook integrations
+- [ ] Stronger automated storage-layout and upgrade-invariant verification
 
-### Phase 3: Scaling (Q3 2024)
-- [ ] Layer 2 deployment (Arbitrum, Optimism)
-- [ ] Cross-chain messaging
-- [ ] Mobile-optimized flows
-- [ ] Gasless transactions (meta-transactions)
-
-### Phase 4: Ecosystem (Q4 2024)
-- [ ] DAO treasury management
-- [ ] Automated market makers
-- [ ] AI-powered moderation
-- [ ] Analytics dashboard
+### Ecosystem Expansion
+- [ ] Governed onboarding for additional community kinds
+- [ ] Unified protocol-level discovery and indexing conventions
+- [ ] Advanced governance and moderation modules
+- [ ] Analytics and operational observability
 
 ## Support
 
@@ -778,6 +720,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 **Built with ❤️ for Web3 Social**
 
-**Version**: 1.0.0  
-**Last Updated**: 2024  
-**Network Compatibility**: All EVM-compatible chains
+**Document Revision**: 2026-07-20
+
+**Community Architecture**: `BaseCommunity` with kind-specific `BeaconProxy` domains
+
+**Design Target**: EVM-compatible smart contract systems

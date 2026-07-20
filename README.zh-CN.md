@@ -41,7 +41,7 @@
 
 **模块化**：每个合约模块解决一类问题，可独立使用或组合使用。
 
-**可扩展**：通过 Merkle 树与最小代理实现省气设计，支持大量用户。
+**可扩展**：通过 Merkle 成员体系与按社区类型隔离的可升级 beacon 域实现省气扩展。
 
 **灵活**：可配置参数，适配不同业务场景。
 
@@ -95,22 +95,26 @@
 
 ---
 
-### 🏘️ MerkelGroup
-**用途**：基于 Merkle 树白名单的可扩展社区
+### 🏘️ BaseCommunity 社群平台
+**用途**：共享社群底座与可独立演进的业务类型
 
-使用 Merkle 树白名单验证的大规模社区管理，省气且支持大量成员；层级访问、嵌套房间、加密群消息与分布式密钥管理。
+此处的 “Base” 指抽象合约底座 `BaseCommunity`，不是 Base 区块链网络。
+
+`BaseCommunity` 集中成员、Merkle 准入、消息、红包、推荐关系、自动加群接口和运维控制。薄 leaf 合约复用这些能力，同时通过链上 kind 表达具体业务类型。OFFICIAL、LAUNCHER、HOOKS 可以使用独立 beacon，把某一类型的实现变更限制在自己的升级域内。
 
 **主要特性**：
-- Merkle 树白名单（省气）
-- 按 Epoch 更新成员
-- 等级体系（1–7 级，基于资产）
-- 嵌套房间（大社区 → 小房间）
-- RSA 群密钥分发
-- 加密/明文消息
+- 按 epoch 更新的 Merkle 成员体系，含 tier 与 nonce 防重放
+- 文本、媒体与加密消息元数据
+- 群红包与经授权的自动加群集成
+- non-blocking 推荐关系图（P0）
+- 兼容 leaf 的 `communityKind()` 链上自描述
+- kind-specific BeaconProxy 升级域
+- 用于治理与发现的 canonical `kind → beacon` 目录
+- 支持轮换与撤销语义的独立群公钥 registry
 
-**适用场景**：NFT 持有者社区、分级会员、教育平台、大型 DAO
+**适用场景**：官方群、代币发射群、流动性社群与经治理接入的未来扩展
 
-**文档**：[contract/MerkelGroup/README.md](./contract/MerkelGroup/README.md)
+**文档**：[contract/MerkelGroup/README.zh-CN.md](./contract/MerkelGroup/README.zh-CN.md)
 
 ---
 
@@ -129,7 +133,7 @@
 
 **适用场景**：代币空投、社区奖励、营销活动、游戏奖励
 
-**文档**：[contract/RedPacket/README.md](./contract/RedPacket/README.md)
+**文档**：[contract/redpacket/README.md](./contract/redpacket/README.md)
 
 ---
 
@@ -143,7 +147,7 @@
 - LP 准入前的邀请绑定
 - Hook 校验的流动性与 Swap 事件
 - 群主、邀请人、LP 收益分账
-- 面向前端 Dashboard 的只读 Lens
+- 聚合群、池、LP 仓位与可领取收益状态的只读 Lens
 
 **适用场景**：流动性驱动社区、邀请型 LP 活动、MIMA 池运营
 
@@ -158,28 +162,21 @@
 │           UniChat 智能合约套件                   │
 └─────────────────────────────────────────────────┘
                         │
-        ┌───────────────┼───────────────┐
-        │               │               │
-        ▼               ▼               ▼
-┌──────────────┐ ┌──────────────┐ ┌──────────────┐
-│ RedPacketGrp │ │ MerkleGroup  │ │DirectMessage │
-│   生态       │ │   生态       │ │   合约       │
-└──────────────┘ └──────────────┘ └──────────────┘
-        │               │               │
-        ├─Registry      ├─Factory       └─RSA 密钥
-        ├─Factory       ├─Community        黑名单
-        └─Group         └─Room             消息
-                                            
-                ┌──────────────┐
-                │  RedPacket   │
-                │   合约       │
-                └──────────────┘
-                     （共享）
+       ┌────────────────┼────────────────┐
+       │                │                │
+       ▼                ▼                ▼
+ DirectMessage    RedPacketGroup    BaseCommunity
+                                            │
+                         ┌──────────────────┼──────────────────┐
+                         ▼                  ▼                  ▼
+                    OFFICIAL           LAUNCHER             HOOKS
+                   官方群 beacon       发射器群 beacon       Hook 群 beacon
+                         └──────────────────┼──────────────────┘
+                                            ▼
+                              CommunityKindRegistry
+                               （kind → beacon 目录）
 
-                ┌──────────────┐
-                │UniChatHooks  │
-                │ MIMA v4 池   │
-                └──────────────┘
+ 共享集成：RedPacket · AirdropClaim · CommunityKeyRegistry
 ```
 
 ### 集成模式
@@ -192,14 +189,15 @@ RedPacket（代币礼物）
 ```
 简单点对点消息，可选代币转账。
 
-#### 模式 2：社区 + 红包
+#### 模式 2：标准社群
 ```
-MerkleGroup 社区
-    ├─> 成员（Merkle 验证）
-    ├─> 房间（嵌套聊天）
-    └─> RedPacket（群组奖励）
+OfficialCommunity
+    ├─> Merkle / 邀请成员
+    ├─> 群消息
+    ├─> 推荐关系记录
+    └─> RedPacket（显式授权）
 ```
-大规模社区，带奖励与嵌套讨论。
+标准群复用完整的 BaseCommunity 基础能力。
 
 #### 模式 3：经济型群组
 ```
@@ -211,25 +209,30 @@ RedPacketGroup
 ```
 带内置经济模型的代币门控社区。
 
-#### 模式 4：完整集成
+#### 模式 4：代币发射群
 ```
-MerkleGroup 社区
-    ├─> DirectMessage（成员间 P2P）
-    ├─> RedPacket（空投）
-    └─> 房间
-            ├─> 群红包
-            └─> 私密讨论
+TokenLauncherFactory
+    ├─> StrictLaunchToken
+    └─> LauncherCommunity
+            ├─> BaseCommunity 基础能力
+            └─> 独立 launcher 发现索引
 ```
-具备全部能力的完整社交平台。
+发射器群可在专属 beacon 后演进，不改变官方群。
 
 #### 模式 5：社区流动性经济
 ```
-MerkleGroup / RedPacketGroup 社区
-    ├─> 邀请绑定
-    ├─> MIMA/USDT Hook 池
-    └─> 收益分账
+HooksCommunity
+    ├─> LP 自动入群（经授权 claim operator）
+    ├─> 邀请人资格
+    └─> 外部 Hook 收益系统
 ```
-带邀请人与 LP 激励的流动性社区。
+流动性社群复用 BaseCommunity，同时把池与收益逻辑留在群核心之外。
+
+### 重要边界
+
+- `CommunityKindRegistry` 编目 kind beacon；当前工厂并非统一通过它路由建群。
+- 官方群、发射器群与 Hook 群使用不同发现源，不存在一张全局实例列表。
+- 修改 registry 目录项不会改变既有 proxy 创建时绑定的 beacon。
 
 ## 技术栈
 
@@ -250,9 +253,12 @@ MerkleGroup / RedPacketGroup 社区
 
 ### 设计模式
 
-- **EIP-1167 最小代理**：省气的克隆
-  - 用于：GroupFactory、CommunityFactory
-  - 节省约 90% 部署 gas
+- **BeaconProxy + UpgradeableBeacon**：可升级群实例
+  - 用于 OFFICIAL、LAUNCHER 与 HOOKS 社群域
+  - 拥有专属 beacon 的 kind 可在自己的升级域内演进
+  - 既有群 proxy 切换 implementation 前需要校验 storage 兼容性
+
+- **EIP-1167 最小代理**：仍可用于 GroupFactory 等 legacy 或独立模块，但已不是当前 CommunityFactory 模型
 
 - **工厂模式**：标准化合约创建
   - 可预测地址
@@ -300,7 +306,7 @@ struct Member {
 - **RSA 公钥**：链上密钥注册
 - **客户端加密**：保护隐私
 - **密钥轮换**：更新密钥不丢历史
-- **群密钥**：通过 Merkle 树分发
+- **社群群密钥**：独立 registry 支持轮换、撤销与经 Merkle 分发的加密会话密钥包
 
 #### 管理工具
 - **黑名单**：用户自主拉黑
@@ -369,70 +375,25 @@ struct Member {
 - 含子群：4.5% 主群 + 4.5% 子群
 ```
 
-#### MerkleGroup 结构
+#### BaseCommunity 结构
 ```
-社区（10,000+ 成员）
-├─> 房间 1（10–50 人）
-├─> 房间 2（10–50 人）
-└─> 房间 N（10–50 人）
+BaseCommunity（共享基础能力）
+├─> OfficialCommunity（OFFICIAL）
+├─> LauncherCommunity（LAUNCHER）
+└─> HooksCommunity（HOOKS）
 
-访问：社区成员资格 → 房间邀请
+升级边界：拥有专属 beacon 的 kind 使用自己的既有 beacon 域
+实例索引：由相应 factory 或集成域分别维护
 ```
 
 ## 快速开始
 
-### 环境要求
+本仓库是 UniChat 合约对外的白皮书与架构参考，不是可独立运行的 Hardhat 或 Foundry 工程；仓内 Solidity 文件属于说明性快照，不是生产源码的 source of truth。
 
-```bash
-# 安装 Node.js 与 pnpm
-node --version  # v18+
-pnpm --version  # v8+
-
-# 安装 Hardhat 或 Foundry
-pnpm add --save-dev hardhat
-# 或
-curl -L https://foundry.paradigm.xyz | bash
-foundryup
-```
-
-### 安装
-
-```bash
-# 克隆仓库
-git clone <repository-url>
-cd unichat
-
-# 安装依赖
-pnpm install
-
-# 编译合约
-pnpm hardhat compile
-# 或
-forge build
-```
-
-### 运行测试
-
-```bash
-# Hardhat
-pnpm hardhat test
-
-# Foundry
-forge test
-```
-
-### 部署合约
-
-```bash
-# 在 hardhat.config.js 中配置网络
-# 在 .env 中配置私钥
-
-# 部署到测试网
-pnpm hardhat run scripts/deploy.js --network sepolia
-
-# 在 Etherscan 验证
-pnpm hardhat verify --network sepolia <CONTRACT_ADDRESS>
-```
+1. 先阅读 [BaseCommunity 架构说明](./contract/MerkelGroup/README.zh-CN.md)。
+2. 再阅读与集成能力对应的模块 README。
+3. 集成前确认预期的 factory、kind、beacon 与 registry 关系。
+4. 不要根据本仓库的 legacy 快照推导当前生产行为。
 
 ## 部署指南
 
@@ -472,34 +433,22 @@ address group = factory.createGroup(
 );
 ```
 
-### 2. MerkleGroup 部署
+### 2. BaseCommunity Kind 部署
 
-```solidity
-// 步骤 1：部署实现
-Community communityImpl = new Community();
-Room roomImpl = new Room();
-
-// 步骤 2：部署工厂
-CommunityFactory factory = new CommunityFactory(
-    unichatToken,
-    treasury,
-    50e18,  // 房间创建费
-    address(communityImpl),
-    address(roomImpl)
-);
-
-// 步骤 3：创建社区
-address community = factory.createCommunity(
-    ownerAddr,
-    topicToken,
-    7,  // maxTier
-    "NFT 持有者",
-    "QmAvatar..."
-);
-
-// 步骤 4：设置 Merkle 根
-Community(community).setMerkleRoot(root, "ipfs://...");
+```text
+1. 部署对应的 BaseCommunity leaf implementation。
+2. 为该 kind 部署或选择 UpgradeableBeacon。
+3. 把 kind 与 beacon 登记进 canonical 目录。
+4. 配置真正使用该 beacon 的创建方：
+   - OFFICIAL 使用 CommunityFactory
+   - LAUNCHER 使用 TokenLauncherFactory
+   - HOOKS 使用 Hook 集成流程
+5. 创建并初始化 BeaconProxy 群实例。
+6. 显式接线 red-packet、claim operator、launcher 或 Hook 权限。
+7. 发布 Merkle root 与集成所需的协议元数据。
 ```
+
+只修改 registry 目录项不会升级既有 proxy，也不会重设工厂直接持有的 beacon 引用。部署或集成前请先阅读 [BaseCommunity 架构说明](./contract/MerkelGroup/README.zh-CN.md)。
 
 ### 3. RedPacket 部署
 
@@ -560,18 +509,18 @@ dm.setRedPacket(address(redPacket));
 ### 示例 2：NFT 社区
 
 ```
-组件：MerkleGroup + RedPacket
+组件：OfficialCommunity + RedPacket
 
 配置：
 - 主题代币：NFT 合集地址
 - 等级：1–5 基于 NFT 持有
-- 房间：不同稀有度讨论
+- 群消息：文本、加密消息与媒体 CID
 
 特性：
 - Merkle 白名单（仅 NFT 持有者）
-- 按等级的房间访问
+- 按等级的群成员权限
 - 向持有者发放红包空投
-- 加密讨论房间
+- 推荐关系记录与加密群讨论
 ```
 
 ### 示例 3：P2P 市场
@@ -594,16 +543,16 @@ dm.setRedPacket(address(redPacket));
 ### 示例 4：游戏公会
 
 ```
-组件：RedPacketGroup + MerkleGroup
+组件：RedPacketGroup + BaseCommunity kinds
 
 配置：
 - RedPacketGroup：主公会（入场费）
-- MerkleGroup 社区：按游戏分组
+- OfficialCommunity：按游戏建立标准群
 - 子群：战队/小队
 
 特性：
 - 入场费注入奖池
-- 按游戏的房间
+- 按游戏的社群
 - 随机红包赛
 - 按表现升级等级
 ```
@@ -741,30 +690,23 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ## 路线图
 
-### 第一阶段：核心合约 ✅
-- [x] RedPacketGroup 系统
-- [x] MerkleGroup 系统
-- [x] RedPacket 合约
-- [x] DirectMessage 合约
-- [x] UniChatHooks 模块
+### 已交付基础
+- [x] 共享的 `BaseCommunity` 存储与行为层
+- [x] `OFFICIAL`、`LAUNCHER`、`HOOKS` 三类实现域
+- [x] 按类型隔离的可升级 beacon 与兼容性校验
+- [x] 推荐关系 P0 与 `CommunityKeyRegistry` v2 合约模型
 
-### 第二阶段：增强（2024 Q2）
-- [ ] NFT 门控群组
-- [ ] 多代币入场费
-- [ ] 高级治理模块
-- [ ] 声誉系统
+### 架构演进
+- [ ] 基于 `BaseCommunity` 扩展更多经治理接入的群类型
+- [ ] 更丰富的 kind 专属治理与管理策略
+- [ ] 扩展 claim、密钥、红包与 Hook 模块的跨合约标准
+- [ ] 强化 storage layout 与升级不变量的自动验证
 
-### 第三阶段：扩展（2024 Q3）
-- [ ] Layer 2 部署（Arbitrum、Optimism）
-- [ ] 跨链消息
-- [ ] 移动端优化流程
-- [ ] 无 gas 交易（meta-transactions）
-
-### 第四阶段：生态（2024 Q4）
-- [ ] DAO 金库管理
-- [ ] 自动化做市
-- [ ] AI 辅助管理
-- [ ] 分析看板
+### 生态扩展
+- [ ] 通过治理接入更多社区类型
+- [ ] 统一协议层发现与索引约定
+- [ ] 高级治理与管理模块
+- [ ] 分析与运行可观测性
 
 ## 支持
 
@@ -777,6 +719,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 **为 Web3 社交而建 ❤️**
 
-**版本**：1.0.0  
-**最后更新**：2024  
-**网络兼容**：所有 EVM 兼容链
+**文档修订日期**：2026-07-20
+
+**社区架构**：`BaseCommunity` 与按类型隔离的 `BeaconProxy` 域
+
+**设计目标**：EVM 兼容智能合约系统

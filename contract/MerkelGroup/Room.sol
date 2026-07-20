@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+/**
+ * LEGACY DOCUMENTATION SNAPSHOT
+ * Room is not part of the current BaseCommunity core. This file is retained
+ * only to document the earlier nested-room design. See README.md in this
+ * directory before using any community interface.
+ */
+
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";

@@ -22,7 +22,7 @@ AirdropGroup 模块提供：
 - **一次性领取**：Merkle 树中每个地址仅可领取一次；叶子为 `keccak256(abi.encode(account))`。
 - **邀请人绑定**：领取时可绑定邀请人，绑定后不可更改（先绑先得）。
 - **双份奖励**：领取人与邀请人分别通过 `OZTToken.mintByClaim` 获得 **密马.com** 奖励。
-- **链上入群**：领取后，领取人与邀请人会通过 `ICommunityClaimJoin.claimJoin(address)` 加入 **MerkelGroup 的 Community** 群组（见下）。
+- **链上入群**：领取后，领取人与邀请人会通过 `ICommunityClaimJoin.claimJoin(address)` 加入兼容的 **BaseCommunity** 实例。
 - **符合 OZT 的铸造**：仅领取合约可铸造；代币 Owner 可放弃或转至黑洞地址，使项目方不再拥有任何铸造权。
 
 可选控制：黑名单、每邀请人最大被邀请数（0 表示不限制）、Merkle 根冻结（不可逆）。
@@ -175,19 +175,19 @@ OZT 证明通过以下机制实现「项目方无代币发行权」：
 - **IOZTToken**：`mintByClaim(to, amount)`、`setClaimContractOnce(claimContract_)`。
 - **ICommunityClaimJoin**：`claimJoin(account)` — 用于使领取人、邀请人加入链上群组。
 
-### 领取后加入的群组（MerkelGroup Community）
+### 领取后加入群组（`BaseCommunity` 能力）
 
-接收领取人与邀请人的社区合约即 **MerkelGroup 的 [Community](../MerkelGroup/Community.sol)**。在该合约中：
+接收领取人与邀请人的目标应是提供共享 [`BaseCommunity` claim-join 能力](../MerkelGroup/README.zh-CN.md)的已部署社区类型，而不是本仓库的 legacy `Community.sol` 快照：
 
 - **`claimJoin(address account)`** 会将 `account` 以当前 epoch 的**最高 tier** 加入社区。该函数仅允许**领取操作员**（claim operator）列表中的地址调用（`onlyClaimOperator`）。
 - Community 的 owner 必须调用 **`setClaimOperator(airdropClaim 地址, true)`**，将 AirdropClaim 合约设为领取操作员，否则 AirdropClaim 在领取时调用 `claimJoin` 会因权限不足而 revert。
 
-因此：用户成功领取后，领取人与邀请人都会被加入该 Community 群组（与 Merkle 入群、房间等使用的是同一个 Community）。
+用户成功领取后，领取人与邀请人都会以当前 epoch 的最高 tier 加入配置的社区实例。
 
 ### 部署顺序
 
 1. 部署 **密马.com（OZTToken）**（name, symbol, initialOwner）。
-2. 部署 **AirdropClaim**（owner, token, community, merkleRoot），其中 `community` 为 MerkelGroup **Community** 合约地址。
+2. 部署 **AirdropClaim**（owner, token, community, merkleRoot），其中 `community` 为兼容的已部署 `BaseCommunity` 类型地址。
 3. 在 **Community** 合约上调用 **setClaimOperator**(airdropClaim 地址, true)，使 AirdropClaim 有权调用 `claimJoin`。
 4. 在 **密马.com（OZTToken）** 上调用 **setClaimContractOnce**(airdropClaim 地址)。
 5. 在 AirdropClaim 中设置 Merkle 根（若构造时未设）；可选调用 **freezeMerkleRoot**。
@@ -209,7 +209,7 @@ OZT 证明通过以下机制实现「项目方无代币发行权」：
 
 ### AirdropClaim
 
-- **构造**：`(initialOwner, token_, community_, merkleRoot_)` — `token_` 为 **密马.com** 代币合约（`OZTToken`），`community_` 为 MerkelGroup 的 Community（需在该 Community 上通过 `setClaimOperator` 将本合约设为领取操作员）；`merkleRoot_` 可为 `bytes32(0)` 后仅设置一次。
+- **构造**：`(initialOwner, token_, community_, merkleRoot_)` — `token_` 为 **密马.com** 代币合约（`OZTToken`），`community_` 为兼容的社区实例（需通过 `setClaimOperator` 授权 AirdropClaim）；`merkleRoot_` 可为 `bytes32(0)` 后仅设置一次。
 - **领取**：`claim(proof, inviter)` — `proof` 为 `msg.sender` 的 Merkle 证明（叶子 = `keccak256(abi.encode(msg.sender))`）；`inviter` 可为 `address(0)`。首次领取时可绑定邀请人且不可更改；领取人与邀请人获得奖励，并分别调用 `community.claimJoin`。
 - **管理**：`setMerkleRoot`（仅在未设置过根且未冻结前）、`freezeMerkleRoot`、`setCommunity`、`setBlacklist`、`setInviterLimit`、`rescueERC20`。
 - **视图**：`merkleRoot()`、`isClaimed(account)`、`inviterOf(invitee)`、`inviteeCount(inviter)`、`getInvitees(inviter, offset, limit)`。

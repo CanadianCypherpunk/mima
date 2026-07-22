@@ -20,6 +20,24 @@ UniChat communities use a layered contract architecture:
 
 This document describes the contract architecture and its extension model. It intentionally does not track chain-by-chain deployment status or application-layer support.
 
+## Open Developer Ecosystem
+
+BaseCommunity is designed as a shared foundation for an open ecosystem of community kinds. External teams can create new community models while reusing the same membership, messaging, economic and integration primitives as the platform's existing kinds.
+
+Development is open; canonical registration is governed. A team can independently design and implement a kind, retain responsibility for its specialized behavior and propose its implementation domain for inclusion in `CommunityKindRegistry`. Governance review makes identifiers, compatibility, permissions and upgrade ownership explicit without forcing every community into one product model.
+
+The standard developer path is:
+
+1. define a durable kind and public specification;
+2. implement a thin `BaseCommunity` leaf;
+3. prove initializer, storage and interface compatibility;
+4. prepare a dedicated implementation and beacon;
+5. submit the kind for canonical governance review;
+6. provide an explicit creator, instance index and optional module integrations;
+7. maintain the kind's tests, security evidence and upgrade policy.
+
+See [Build Your Own Community Kind](./DEVELOPER_GUIDE.md) for the complete developer path and use the [Community Kind Proposal Template](./KIND_PROPOSAL_TEMPLATE.md) to prepare a canonical registration request.
+
 ## Architecture Overview
 
 ```text
@@ -114,7 +132,7 @@ If no launcher beacon is configured, a launcher may fall back to the official co
 
 ### Future Kinds
 
-A new kind can inherit `BaseCommunity`, add only its specific business behavior, use a dedicated beacon, and be registered in the canonical directory. Registration is governed; it is not currently a permissionless deployment guarantee.
+External developers can introduce a new kind by inheriting `BaseCommunity`, adding only its specialized behavior and using a dedicated beacon. Building is open; inclusion in the canonical directory follows the governed registration process described in the [developer guide](./DEVELOPER_GUIDE.md).
 
 ## Factory, Beacon and Registry Model
 

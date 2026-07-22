@@ -108,6 +108,7 @@ Here, “Base” means the abstract `BaseCommunity` contract layer, not the Base
 - Group red packets and authorized auto-join integrations
 - Non-blocking referral relationship graph (P0)
 - `communityKind()` self-description for compatible leaf contracts
+- Open extension model for developer-owned community kinds
 - Kind-specific BeaconProxy upgrade domains
 - Canonical `kind → beacon` directory for governance and discovery
 - Separate group-key registry with rotation and revocation semantics
@@ -115,6 +116,8 @@ Here, “Base” means the abstract `BaseCommunity` contract layer, not the Base
 **Ideal For**: Official communities, token-launch communities, liquidity communities and governed future extensions
 
 **Documentation**: [contract/BaseCommunity/README.md](./contract/BaseCommunity/README.md)
+
+**Developer Guide**: [Build Your Own Community Kind](./contract/BaseCommunity/DEVELOPER_GUIDE.md)
 
 ---
 
@@ -624,6 +627,14 @@ Features:
 
 We welcome contributions! Here's how you can help:
 
+### Develop a Community Kind
+
+External teams are invited to build specialized community kinds on BaseCommunity. Development is open, while canonical platform registration follows a transparent governance review for identifiers, compatibility, permissions and upgrade ownership.
+
+Start with the [Community Kind Developer Guide](./contract/BaseCommunity/DEVELOPER_GUIDE.md), then submit the kind specification, compatibility evidence, creator/discovery design and upgrade policy for review.
+
+A proposal may begin as a documentation contribution. The implementation can be maintained in a separate public repository and referenced through the [Community Kind Proposal Template](./contract/BaseCommunity/KIND_PROPOSAL_TEMPLATE.md).
+
 ### Areas for Contribution
 
 - **Testing**: Write comprehensive test suites
@@ -720,7 +731,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 **Built with ❤️ for Web3 Social**
 
-**Document Revision**: 2026-07-20
+**Document Revision**: 2026-07-22
 
 **Community Architecture**: `BaseCommunity` with kind-specific `BeaconProxy` domains
 

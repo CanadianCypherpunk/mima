@@ -20,6 +20,24 @@ UniChat 社群采用分层合约架构：
 
 本文只描述合约架构与扩展模型，不记录逐链部署状态，也不讨论应用层支持情况。
 
+## 开放开发者生态
+
+BaseCommunity 被设计为开放群聊生态的共享底座。第三方团队可以创建新的群聊模式，同时复用平台既有 kind 使用的成员、消息、经济与集成基础能力。
+
+开发保持开放，canonical 注册采用治理审核。团队可以独立设计和实现自己的 kind，负责维护差异化业务能力，并申请将该 implementation 域登记进 `CommunityKindRegistry`。治理审核让 kind 标识、兼容性、权限和升级控制权保持透明，而不是要求所有群都使用同一种产品模式。
+
+标准开发路径为：
+
+1. 定义可长期使用的 kind 与公开规范；
+2. 实现一个薄 `BaseCommunity` leaf；
+3. 证明 initializer、storage 和接口兼容；
+4. 准备独立 implementation 与 beacon；
+5. 提交 kind，申请 canonical 治理审核；
+6. 提供明确的 creator、实例索引与可选模块集成；
+7. 持续维护测试、安全证据与升级策略。
+
+完整流程见[《开发属于你的 Community Kind》](./DEVELOPER_GUIDE.zh-CN.md)，申请 canonical 注册时可直接使用 [Community Kind 提案模板](./KIND_PROPOSAL_TEMPLATE.zh-CN.md)。
+
 ## 架构总览
 
 ```text
@@ -113,7 +131,7 @@ UniChat 社群采用分层合约架构：
 
 ### 未来类型
 
-新 kind 可以继承 `BaseCommunity`，只增加自己的业务差异，使用独立 beacon，并登记进 canonical 目录。登记由治理控制，目前不代表任何人都可无许可上线。
+外部开发者可以继承 `BaseCommunity`、只增加差异化业务能力，并为新 kind 使用独立 beacon。开发本身保持开放；进入 canonical 目录需要遵循[开发者指南](./DEVELOPER_GUIDE.zh-CN.md)中的治理注册流程。
 
 ## 工厂、Beacon 与目录模型
 

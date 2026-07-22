@@ -108,6 +108,7 @@
 - 群红包与经授权的自动加群集成
 - non-blocking 推荐关系图（P0）
 - 兼容 leaf 的 `communityKind()` 链上自描述
+- 面向开发者自有群类型的开放扩展模型
 - kind-specific BeaconProxy 升级域
 - 用于治理与发现的 canonical `kind → beacon` 目录
 - 支持轮换与撤销语义的独立群公钥 registry
@@ -115,6 +116,8 @@
 **适用场景**：官方群、代币发射群、流动性社群与经治理接入的未来扩展
 
 **文档**：[contract/BaseCommunity/README.zh-CN.md](./contract/BaseCommunity/README.zh-CN.md)
+
+**开发者指南**：[开发属于你的 Community Kind](./contract/BaseCommunity/DEVELOPER_GUIDE.zh-CN.md)
 
 ---
 
@@ -623,6 +626,14 @@ dm.setRedPacket(address(redPacket));
 
 欢迎贡献，可以从以下方面参与：
 
+### 开发新的 Community Kind
+
+欢迎外部团队基于 BaseCommunity 构建具有差异化能力的群聊类型。开发本身保持开放；成为平台 canonical kind 时，需要通过透明的治理审核，明确标识、兼容性、权限与升级控制权。
+
+请先阅读 [Community Kind 开发者指南](./contract/BaseCommunity/DEVELOPER_GUIDE.zh-CN.md)，再提交 kind 规范、兼容性证据、creator/发现方案与升级策略进行审核。
+
+提案可以先作为文档贡献提交；implementation 可以在独立公开仓库中维护，并通过 [Community Kind 提案模板](./contract/BaseCommunity/KIND_PROPOSAL_TEMPLATE.zh-CN.md)引用。
+
 ### 贡献方向
 
 - **测试**：完善测试用例
@@ -719,7 +730,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 **为 Web3 社交而建 ❤️**
 
-**文档修订日期**：2026-07-20
+**文档修订日期**：2026-07-22
 
 **社区架构**：`BaseCommunity` 与按类型隔离的 `BeaconProxy` 域
 

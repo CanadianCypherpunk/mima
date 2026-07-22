@@ -181,7 +181,7 @@ All steps are independently verifiable on-chain and from public data.
 
 ### Group joined after claim (`BaseCommunity` capability)
 
-The destination is a deployed community kind that exposes the shared [`BaseCommunity` claim-join capability](../MerkelGroup/README.md), rather than the legacy `Community.sol` snapshot in this repository:
+The destination is a deployed community kind that exposes the shared [`BaseCommunity` claim-join capability](../BaseCommunity/README.md), rather than the legacy `Community.sol` snapshot in this repository:
 
 - **`claimJoin(address account)`** adds `account` as a member with the community’s maximum tier in the current epoch. It is callable only by addresses in the **claim operator** list (`onlyClaimOperator`).
 - The Community owner must call **`setClaimOperator(airdropClaimAddress, true)`** so that the AirdropClaim contract is allowed to call `claimJoin`. Without this, `AirdropClaim.claim` would revert when it tries to add the claimer and inviter to the community.

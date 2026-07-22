@@ -114,7 +114,7 @@ Here, “Base” means the abstract `BaseCommunity` contract layer, not the Base
 
 **Ideal For**: Official communities, token-launch communities, liquidity communities and governed future extensions
 
-**Documentation**: [contract/MerkelGroup/README.md](./contract/MerkelGroup/README.md)
+**Documentation**: [contract/BaseCommunity/README.md](./contract/BaseCommunity/README.md)
 
 ---
 
@@ -390,7 +390,7 @@ Instance indexes: maintained by the relevant factory or integration domain
 
 This repository is the public whitepaper and architecture reference for the UniChat contracts. It is not a standalone Hardhat or Foundry workspace, and the included Solidity files are documentation snapshots rather than the production source of truth.
 
-1. Start with the [BaseCommunity architecture guide](./contract/MerkelGroup/README.md).
+1. Start with the [BaseCommunity architecture guide](./contract/BaseCommunity/README.md).
 2. Read the module README that matches the capability you are integrating.
 3. Confirm the intended factory, kind, beacon, and registry relationships before integration.
 4. Do not derive current production behavior from legacy snapshots in this repository.
@@ -448,7 +448,7 @@ address group = factory.createGroup(
 7. Publish the Merkle root and the protocol metadata needed by the integration.
 ```
 
-Changing a registry entry alone does not upgrade existing proxies or reconfigure a factory's direct beacon reference. See the [BaseCommunity architecture guide](./contract/MerkelGroup/README.md) before any deployment or integration.
+Changing a registry entry alone does not upgrade existing proxies or reconfigure a factory's direct beacon reference. See the [BaseCommunity architecture guide](./contract/BaseCommunity/README.md) before any deployment or integration.
 
 ### 3. RedPacket Deployment
 

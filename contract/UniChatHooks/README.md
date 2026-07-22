@@ -2,7 +2,7 @@
 
 Uniswap v4 Hook integration for the UniChat / MIMA community economy. This module connects group invitation, MIMA/USDT liquidity, swap activity, and revenue sharing.
 
-This folder is the public UniChat-facing module summary and a small integration surface; it does not copy the full Uniswap v4 implementation workspace. In the current community architecture, a Hook-enabled group is a `HOOKS`-kind implementation built on `BaseCommunity`.
+This folder is the public UniChat-facing module summary and a small integration surface; it does not copy the full Uniswap v4 implementation workspace. In the current community architecture, a Hook-enabled group is a `HOOKS`-kind implementation built on [`BaseCommunity`](../BaseCommunity/README.md).
 
 ## Table of Contents
 

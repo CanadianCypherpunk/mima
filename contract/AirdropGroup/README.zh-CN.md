@@ -177,7 +177,7 @@ OZT 证明通过以下机制实现「项目方无代币发行权」：
 
 ### 领取后加入群组（`BaseCommunity` 能力）
 
-接收领取人与邀请人的目标应是提供共享 [`BaseCommunity` claim-join 能力](../MerkelGroup/README.zh-CN.md)的已部署社区类型，而不是本仓库的 legacy `Community.sol` 快照：
+接收领取人与邀请人的目标应是提供共享 [`BaseCommunity` claim-join 能力](../BaseCommunity/README.zh-CN.md)的已部署社区类型，而不是本仓库的 legacy `Community.sol` 快照：
 
 - **`claimJoin(address account)`** 会将 `account` 以当前 epoch 的**最高 tier** 加入社区。该函数仅允许**领取操作员**（claim operator）列表中的地址调用（`onlyClaimOperator`）。
 - Community 的 owner 必须调用 **`setClaimOperator(airdropClaim 地址, true)`**，将 AirdropClaim 合约设为领取操作员，否则 AirdropClaim 在领取时调用 `claimJoin` 会因权限不足而 revert。

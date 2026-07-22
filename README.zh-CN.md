@@ -114,7 +114,7 @@
 
 **适用场景**：官方群、代币发射群、流动性社群与经治理接入的未来扩展
 
-**文档**：[contract/MerkelGroup/README.zh-CN.md](./contract/MerkelGroup/README.zh-CN.md)
+**文档**：[contract/BaseCommunity/README.zh-CN.md](./contract/BaseCommunity/README.zh-CN.md)
 
 ---
 
@@ -390,7 +390,7 @@ BaseCommunity（共享基础能力）
 
 本仓库是 UniChat 合约对外的白皮书与架构参考，不是可独立运行的 Hardhat 或 Foundry 工程；仓内 Solidity 文件属于说明性快照，不是生产源码的 source of truth。
 
-1. 先阅读 [BaseCommunity 架构说明](./contract/MerkelGroup/README.zh-CN.md)。
+1. 先阅读 [BaseCommunity 架构说明](./contract/BaseCommunity/README.zh-CN.md)。
 2. 再阅读与集成能力对应的模块 README。
 3. 集成前确认预期的 factory、kind、beacon 与 registry 关系。
 4. 不要根据本仓库的 legacy 快照推导当前生产行为。
@@ -448,7 +448,7 @@ address group = factory.createGroup(
 7. 发布 Merkle root 与集成所需的协议元数据。
 ```
 
-只修改 registry 目录项不会升级既有 proxy，也不会重设工厂直接持有的 beacon 引用。部署或集成前请先阅读 [BaseCommunity 架构说明](./contract/MerkelGroup/README.zh-CN.md)。
+只修改 registry 目录项不会升级既有 proxy，也不会重设工厂直接持有的 beacon 引用。部署或集成前请先阅读 [BaseCommunity 架构说明](./contract/BaseCommunity/README.zh-CN.md)。
 
 ### 3. RedPacket 部署
 

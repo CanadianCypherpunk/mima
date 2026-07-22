@@ -2,7 +2,7 @@
 
 UniChat / MIMA 社区经济的 Uniswap v4 Hook 集成模块。它把建群邀请、MIMA/USDT 流动性、Swap 活动和收益分账连接起来。
 
-这里保留面向 UniChat 的公开模块说明和一个很小的对接接口，不复制完整的 Uniswap v4 实现工程。在当前社区架构中，支持 Hook 的群属于构建在 `BaseCommunity` 之上的 `HOOKS` 类型实现。
+这里保留面向 UniChat 的公开模块说明和一个很小的对接接口，不复制完整的 Uniswap v4 实现工程。在当前社区架构中，支持 Hook 的群属于构建在 [`BaseCommunity`](../BaseCommunity/README.zh-CN.md) 之上的 `HOOKS` 类型实现。
 
 ## 目录
 
